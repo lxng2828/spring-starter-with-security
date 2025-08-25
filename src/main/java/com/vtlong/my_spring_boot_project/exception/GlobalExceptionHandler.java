@@ -1,6 +1,5 @@
 package com.vtlong.my_spring_boot_project.exception;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
-import com.vtlong.my_spring_boot_project.dto.response.ErrorResponse;
+import com.vtlong.my_spring_boot_project.dto.ApiResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -29,7 +28,7 @@ public class GlobalExceptionHandler {
         private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
         @ExceptionHandler(AppException.class)
-        public ResponseEntity<ErrorResponse> handleAppException(
+        public ResponseEntity<ApiResponse<Object>> handleAppException(
                         AppException ex, HttpServletRequest request) {
 
                 ErrorCode errorCode = ex.getErrorCode();
@@ -43,15 +42,12 @@ public class GlobalExceptionHandler {
                                 httpStatus.value(),
                                 request.getHeader("User-Agent"));
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(httpStatus.value())
-                                .error(errorCode.getCode())
-                                .message(ex.getMessage())
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                ex.getMessage(),
+                                httpStatus.value(),
+                                errorCode.getCode());
 
-                return ResponseEntity.status(httpStatus).body(errorResponse);
+                return ResponseEntity.status(httpStatus).body(apiResponse);
         }
 
         private HttpStatus determineHttpStatus(ErrorCode errorCode) {
@@ -84,7 +80,7 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
-        public ResponseEntity<ErrorResponse> handleValidationExceptions(
+        public ResponseEntity<ApiResponse<Object>> handleValidationExceptions(
                         MethodArgumentNotValidException ex, HttpServletRequest request) {
 
                 List<String> errors = ex.getBindingResult()
@@ -97,20 +93,16 @@ public class GlobalExceptionHandler {
 
                 logger.error("Validation error for {}: {}", request.getRequestURI(), errorMessage);
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Validation Error")
-                                .message("Invalid request parameters")
-                                .path(request.getRequestURI())
-                                .details(errors)
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Invalid request parameters",
+                                HttpStatus.BAD_REQUEST.value(),
+                                errors);
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(ConstraintViolationException.class)
-        public ResponseEntity<ErrorResponse> handleConstraintViolation(
+        public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(
                         ConstraintViolationException ex, HttpServletRequest request) {
 
                 List<String> errors = ex.getConstraintViolations()
@@ -122,54 +114,44 @@ public class GlobalExceptionHandler {
 
                 logger.error("Constraint violation for {}: {}", request.getRequestURI(), errorMessage);
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Constraint Violation")
-                                .message("Invalid request data")
-                                .path(request.getRequestURI())
-                                .details(errors)
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Invalid request data",
+                                HttpStatus.BAD_REQUEST.value(),
+                                errors);
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(HttpMessageNotReadableException.class)
-        public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+        public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadable(
                         HttpMessageNotReadableException ex, HttpServletRequest request) {
 
                 logger.error("JSON parsing error for {}: {}", request.getRequestURI(), ex.getMessage());
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Invalid JSON")
-                                .message("Request body format is invalid")
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Request body format is invalid",
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Invalid JSON");
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(MissingServletRequestParameterException.class)
-        public ResponseEntity<ErrorResponse> handleMissingParameter(
+        public ResponseEntity<ApiResponse<Object>> handleMissingParameter(
                         MissingServletRequestParameterException ex, HttpServletRequest request) {
 
                 logger.error("Missing parameter for {}: {}", request.getRequestURI(), ex.getMessage());
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Missing Parameter")
-                                .message("Required parameter '" + ex.getParameterName() + "' is missing")
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Required parameter '" + ex.getParameterName() + "' is missing",
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Missing Parameter");
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-        public ResponseEntity<ErrorResponse> handleException(
+        public ResponseEntity<ApiResponse<Object>> handleException(
                         MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 
                 logger.error("Type mismatch for {}: {}", request.getRequestURI(), ex.getMessage());
@@ -177,66 +159,54 @@ public class GlobalExceptionHandler {
                 Class<?> requiredType = ex.getRequiredType();
                 String typeName = requiredType != null ? requiredType.getSimpleName() : "unknown";
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Type Mismatch")
-                                .message("Parameter '" + ex.getName() + "' should be of type " + typeName)
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Parameter '" + ex.getName() + "' should be of type " + typeName,
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Type Mismatch");
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-        public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+        public ResponseEntity<ApiResponse<Object>> handleMethodNotSupported(
                         HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
 
                 logger.warn("Method not supported for {}: {} - Supported methods: {}",
                                 request.getRequestURI(), ex.getMethod(), ex.getSupportedMethods());
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.METHOD_NOT_ALLOWED.value())
-                                .error("Method Not Allowed")
-                                .message("HTTP method '" + ex.getMethod() + "' is not supported for this endpoint")
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint",
+                                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                                "Method Not Allowed");
 
-                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponse);
+                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(apiResponse);
         }
 
         @ExceptionHandler(IllegalArgumentException.class)
-        public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+        public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
                         IllegalArgumentException ex, HttpServletRequest request) {
 
                 logger.error("Illegal argument for {}: {}", request.getRequestURI(), ex.getMessage());
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.BAD_REQUEST.value())
-                                .error("Bad Request")
-                                .message(ex.getMessage())
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                ex.getMessage(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Bad Request");
 
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(apiResponse);
         }
 
         @ExceptionHandler(Exception.class)
-        public ResponseEntity<ErrorResponse> handleGenericException(
+        public ResponseEntity<ApiResponse<Object>> handleGenericException(
                         Exception ex, HttpServletRequest request) {
 
                 logger.error("Unexpected error occurred for {}: ", request.getRequestURI(), ex);
 
-                ErrorResponse errorResponse = ErrorResponse.builder()
-                                .timestamp(LocalDateTime.now())
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                                .error("Internal Server Error")
-                                .message("An unexpected error occurred. Please try again later.")
-                                .path(request.getRequestURI())
-                                .build();
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "An unexpected error occurred. Please try again later.",
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "Internal Server Error");
 
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
 }

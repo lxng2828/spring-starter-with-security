@@ -14,7 +14,8 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED("SYS_005", "Phương thức HTTP không được hỗ trợ"),
     REQUEST_TIMEOUT("SYS_006", "Yêu cầu quá thời gian chờ"),
     TOO_MANY_REQUESTS("SYS_007", "Quá nhiều yêu cầu, vui lòng thử lại sau"),
-    SERVICE_UNAVAILABLE("SYS_008", "Dịch vụ tạm thời không khả dụng");
+    SERVICE_UNAVAILABLE("SYS_008", "Dịch vụ tạm thời không khả dụng"),
+    INVALID_CREDENTIALS("SYS_009", "Tài khoản hoặc mật khẩu không hợp lệ");
 
     private final String code;
     private final String message;

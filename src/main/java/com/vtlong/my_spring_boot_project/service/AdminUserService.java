@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +24,15 @@ public class AdminUserService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminUserService.class);
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserMapper userMapper;
+    public AdminUserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Transactional(readOnly = true)
     public List<UserResponseDto> findAll() {
@@ -57,7 +61,6 @@ public class AdminUserService {
     public UserResponseDto create(CreateUserRequestDto createUserRequestDto) {
         logger.info("Creating new user with username: {}", createUserRequestDto.getUsername());
 
-        // Validate unique constraints
         if (userRepository.existsByUsername(createUserRequestDto.getUsername())) {
             logger.error("Username already exists: {}", createUserRequestDto.getUsername());
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS,
@@ -70,6 +73,12 @@ public class AdminUserService {
         }
 
         User user = userMapper.toEntity(createUserRequestDto);
+
+        logger.info("Encoding password for user: {}", user.getUsername());
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        logger.debug("Password encoded successfully for user: {}", user.getUsername());
+
         User savedUser = userRepository.save(user);
         logger.info("User created successfully with id: {}", savedUser.getId());
         return userMapper.toResponseDto(savedUser);
