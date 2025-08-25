@@ -20,6 +20,10 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+jwt:
+  signer-key: ${JWT_SIGNER_KEY:9BZQWCbJ1dex4l/xmilDKuXfuLYecSCCF9B44x1s/m+BOlXGjQ7cjdXSU9rEoMyR}
+  expiration-hours: ${JWT_EXPIRATION_HOURS:24}
+
 logging:
   level:
     "[com.vtlong.my_spring_boot_project]": ${LOG_LEVEL:INFO}
