@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,8 +29,11 @@ public class AdminUserController {
     
     private static final Logger logger = LoggerFactory.getLogger(AdminUserController.class);
     
-    @Autowired
-    private AdminUserService adminUserService;
+    private final AdminUserService adminUserService;
+    
+    public AdminUserController(AdminUserService adminUserService) {
+        this.adminUserService = adminUserService;
+    }
     
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {

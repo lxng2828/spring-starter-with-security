@@ -3,6 +3,9 @@ package com.vtlong.my_spring_boot_project.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
+
+import org.hibernate.annotations.BatchSize;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,18 +33,20 @@ import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.FetchType;
+
 
 @Getter
 @Setter
 @Builder
-@ToString(of = {"id", "username", "email", "firstName", "lastName"})
-@EqualsAndHashCode(of = {"id", "username", "email"})
+@ToString(of = { "id", "username", "email", "firstName", "lastName" })
+@EqualsAndHashCode(of = { "id", "username", "email" })
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_users_username", columnList = "username", unique = true),
-    @Index(name = "idx_users_email", columnList = "email", unique = true)
+        @Index(name = "idx_users_username", columnList = "username", unique = true),
+        @Index(name = "idx_users_email", columnList = "email", unique = true)
 })
 public class User {
     @Id
@@ -64,16 +69,12 @@ public class User {
     @JsonIgnore
     private String password;
 
-    @ManyToMany
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
-        indexes = {
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"), indexes = {
             @Index(name = "idx_user_roles_user_id", columnList = "user_id"),
             @Index(name = "idx_user_roles_role_id", columnList = "role_id")
-        }
-    )
+    })
+    @BatchSize(size = 10)
     private Set<Role> roles;
 
     @NotBlank(message = "First name is required")

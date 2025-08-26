@@ -2,6 +2,7 @@ package com.vtlong.my_spring_boot_project.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,10 @@ import com.vtlong.my_spring_boot_project.exception.AppException;
 import com.vtlong.my_spring_boot_project.exception.ErrorCode;
 import com.vtlong.my_spring_boot_project.mapper.UserMapper;
 import com.vtlong.my_spring_boot_project.model.User;
+import com.vtlong.my_spring_boot_project.model.Role;
+import com.vtlong.my_spring_boot_project.model.RoleType;
 import com.vtlong.my_spring_boot_project.repository.UserRepository;
+import com.vtlong.my_spring_boot_project.repository.RoleRepository;
 
 @Service
 @Transactional
@@ -27,11 +31,14 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
-    public AdminUserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public AdminUserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder,
+            RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.roleRepository = roleRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +85,16 @@ public class AdminUserService {
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         logger.debug("Password encoded successfully for user: {}", user.getUsername());
+
+        logger.info("Assigning default USER role to new user: {}", user.getUsername());
+        Role userRole = roleRepository.findByName(RoleType.USER)
+                .orElseThrow(() -> {
+                    logger.error("Default USER role not found in database");
+                    return new AppException(ErrorCode.INTERNAL_SERVER_ERROR, "Default USER role not found");
+                });
+
+        user.setRoles(Set.of(userRole));
+        logger.debug("Default USER role assigned successfully to user: {}", user.getUsername());
 
         User savedUser = userRepository.save(user);
         logger.info("User created successfully with id: {}", savedUser.getId());
