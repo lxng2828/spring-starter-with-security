@@ -3,6 +3,7 @@ package com.vtlong.my_spring_boot_project.service;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -56,6 +57,12 @@ public class AuthService {
         return LoginResponse.builder().success(true).token(token).build();
     }
 
+    private List<String> buildScopes(Set<String> roleNames) {
+        return roleNames.stream()
+                .map(role -> role)
+                .collect(Collectors.toList());
+    }
+
     private String generateToken(User user) {
         logger.debug("Creating JWT header for user: {}", user.getUsername());
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
@@ -73,7 +80,7 @@ public class AuthService {
                 .claim("userId", user.getId())
                 .claim("username", user.getUsername())
                 .claim("email", user.getEmail())
-                .claim("roles", roleNames)
+                .claim("scope", buildScopes(roleNames))
                 .build();
         JWSObject jwsObject = new JWSObject(jwsHeader, new Payload(jwsClaimsSet.toJSONObject()));
         try {
