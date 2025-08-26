@@ -16,6 +16,8 @@ import com.vtlong.my_spring_boot_project.dto.response.LoginResponse;
 import com.vtlong.my_spring_boot_project.dto.response.IntrospectResponse;
 import com.vtlong.my_spring_boot_project.service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -27,14 +29,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest loginRequest,
+            HttpServletRequest request) {
         LoginResponse loginResponse = authService.handleLogin(loginRequest);
-        return ResponseEntity.ok(ApiResponse.success(loginResponse, "Đăng nhập thành công"));
+        return ResponseEntity.ok(ApiResponse.success(loginResponse, "Đăng nhập thành công", request));
     }
 
     @PostMapping("/introspect")
-    public ResponseEntity<ApiResponse<IntrospectResponse>> introspect(@RequestBody IntrospectRequest introspectRequest) throws JOSEException, ParseException {
+    public ResponseEntity<ApiResponse<IntrospectResponse>> introspect(@RequestBody IntrospectRequest introspectRequest,
+            HttpServletRequest request) throws JOSEException, ParseException {
         IntrospectResponse introspectResponse = authService.handleIntrospect(introspectRequest);
-        return ResponseEntity.ok(ApiResponse.success(introspectResponse, "Introspect thành công"));
+        return ResponseEntity.ok(ApiResponse.success(introspectResponse, "Introspect thành công", request));
     }
 }

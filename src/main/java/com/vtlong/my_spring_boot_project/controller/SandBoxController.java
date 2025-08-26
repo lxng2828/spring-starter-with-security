@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.vtlong.my_spring_boot_project.dto.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/sandbox")
 public class SandBoxController {
     @GetMapping("/security-context")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getSecurityContextInfo() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getSecurityContextInfo(
+            HttpServletRequest request) {
         Map<String, Object> securityInfo = new HashMap<>();
         var securityContext = SecurityContextHolder.getContext();
         securityInfo.put("contextClass", securityContext.getClass().getSimpleName());
@@ -56,6 +58,6 @@ public class SandBoxController {
         securityInfo.put("timestamp", System.currentTimeMillis());
         securityInfo.put("timestampReadable", java.time.Instant.now().toString());
         return ResponseEntity
-                .ok(ApiResponse.success(securityInfo, "Security context information retrieved successfully"));
+                .ok(ApiResponse.success(securityInfo, "Security context information retrieved successfully", request));
     }
 }

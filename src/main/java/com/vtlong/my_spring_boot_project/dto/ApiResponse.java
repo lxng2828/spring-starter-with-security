@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Data
 @Builder
@@ -29,6 +30,17 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static <T> ApiResponse<T> success(T data, String message, HttpServletRequest request) {
+        return ApiResponse.<T>builder()
+                .timestamp(LocalDateTime.now())
+                .status(200)
+                .success(true)
+                .message(message)
+                .data(data)
+                .path(request != null ? request.getRequestURI() : null)
+                .build();
+    }
+
     public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
                 .timestamp(LocalDateTime.now())
@@ -36,6 +48,16 @@ public class ApiResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> success(String message, HttpServletRequest request) {
+        return ApiResponse.<T>builder()
+                .timestamp(LocalDateTime.now())
+                .status(200)
+                .success(true)
+                .message(message)
+                .path(request != null ? request.getRequestURI() : null)
                 .build();
     }
 
@@ -48,12 +70,33 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static <T> ApiResponse<T> error(String message, Integer status, HttpServletRequest request) {
+        return ApiResponse.<T>builder()
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .success(false)
+                .message(message)
+                .path(request != null ? request.getRequestURI() : null)
+                .build();
+    }
+
     public static <T> ApiResponse<T> error(String message, Integer status) {
         return ApiResponse.<T>builder()
                 .timestamp(LocalDateTime.now())
                 .status(status)
                 .success(false)
                 .message(message)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(String message, Integer status, Object error, HttpServletRequest request) {
+        return ApiResponse.<T>builder()
+                .timestamp(LocalDateTime.now())
+                .status(status)
+                .success(false)
+                .message(message)
+                .error(error)
+                .path(request != null ? request.getRequestURI() : null)
                 .build();
     }
 

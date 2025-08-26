@@ -35,7 +35,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 ex.getMessage(),
                                 httpStatus.value(),
-                                errorCode.getCode());
+                                errorCode.getCode(),
+                                request);
 
                 return ResponseEntity.status(httpStatus).body(apiResponse);
         }
@@ -47,7 +48,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "You do not have permission to access this resource",
                                 HttpStatus.FORBIDDEN.value(),
-                                "Access Denied");
+                                "Access Denied",
+                                request);
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
         }
@@ -59,7 +61,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Access permission denied",
                                 HttpStatus.FORBIDDEN.value(),
-                                "Authorization Denied");
+                                "Authorization Denied",
+                                request);
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
         }
@@ -108,7 +111,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Invalid request parameters",
                                 HttpStatus.BAD_REQUEST.value(),
-                                errors);
+                                errors,
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -127,7 +131,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Invalid request data",
                                 HttpStatus.BAD_REQUEST.value(),
-                                errors);
+                                errors,
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -139,7 +144,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Request body format is invalid",
                                 HttpStatus.BAD_REQUEST.value(),
-                                "Invalid JSON");
+                                "Invalid JSON",
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -151,7 +157,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Required parameter '" + ex.getParameterName() + "' is missing",
                                 HttpStatus.BAD_REQUEST.value(),
-                                "Missing Parameter");
+                                "Missing Parameter",
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -166,7 +173,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Parameter '" + ex.getName() + "' should be of type " + typeName,
                                 HttpStatus.BAD_REQUEST.value(),
-                                "Type Mismatch");
+                                "Type Mismatch",
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -178,7 +186,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint",
                                 HttpStatus.METHOD_NOT_ALLOWED.value(),
-                                "Method Not Allowed");
+                                "Method Not Allowed",
+                                request);
 
                 return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(apiResponse);
         }
@@ -190,7 +199,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 ex.getMessage(),
                                 HttpStatus.BAD_REQUEST.value(),
-                                "Bad Request");
+                                "Bad Request",
+                                request);
 
                 return ResponseEntity.badRequest().body(apiResponse);
         }
@@ -202,7 +212,8 @@ public class GlobalExceptionHandler {
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "An unexpected error occurred. Please try again later.",
                                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                "Internal Server Error");
+                                "Internal Server Error",
+                                request);
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }

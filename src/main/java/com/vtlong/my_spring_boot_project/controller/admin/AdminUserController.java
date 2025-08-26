@@ -21,6 +21,7 @@ import com.vtlong.my_spring_boot_project.dto.response.UserResponseDto;
 import com.vtlong.my_spring_boot_project.service.AdminUserService;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/admin/users")
@@ -35,40 +36,44 @@ public class AdminUserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers(HttpServletRequest request) {
         List<UserResponseDto> users = adminUserService.findAll();
-        return ResponseEntity.ok(ApiResponse.success(users, "Lấy danh sách người dùng thành công"));
+        return ResponseEntity.ok(ApiResponse.success(users, "Lấy danh sách người dùng thành công", request));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable String id,
+            HttpServletRequest request) {
         UserResponseDto user = adminUserService.findById(id);
-        return ResponseEntity.ok(ApiResponse.success(user, "Lấy thông tin người dùng thành công"));
+        return ResponseEntity.ok(ApiResponse.success(user, "Lấy thông tin người dùng thành công", request));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponseDto>> createUser(
-            @Valid @RequestBody CreateUserRequestDto createUserRequestDto) {
+            @Valid @RequestBody CreateUserRequestDto createUserRequestDto,
+            HttpServletRequest request) {
         UserResponseDto createdUser = adminUserService.create(createUserRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(createdUser, "Tạo người dùng thành công"));
+                .body(ApiResponse.success(createdUser, "Tạo người dùng thành công", request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
             @PathVariable String id,
-            @Valid @RequestBody UpdateUserRequestDto updateUserRequestDto) {
+            @Valid @RequestBody UpdateUserRequestDto updateUserRequestDto,
+            HttpServletRequest request) {
         UserResponseDto updatedUser = adminUserService.update(id, updateUserRequestDto);
-        return ResponseEntity.ok(ApiResponse.success(updatedUser, "Cập nhật người dùng thành công"));
+        return ResponseEntity.ok(ApiResponse.success(updatedUser, "Cập nhật người dùng thành công", request));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable String id,
+            HttpServletRequest request) {
         adminUserService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công"));
+        return ResponseEntity.ok(ApiResponse.success("Xóa người dùng thành công", request));
     }
 }
