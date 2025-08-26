@@ -3,8 +3,6 @@ package com.vtlong.my_spring_boot_project.exception;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -25,22 +23,12 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-        private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
         @ExceptionHandler(AppException.class)
         public ResponseEntity<ApiResponse<Object>> handleAppException(
                         AppException ex, HttpServletRequest request) {
 
                 ErrorCode errorCode = ex.getErrorCode();
                 HttpStatus httpStatus = determineHttpStatus(errorCode);
-
-                // Enhanced logging with more context
-                logger.warn("Application exception for {}: {} - {} - Status: {} - User-Agent: {}",
-                                request.getRequestURI(),
-                                errorCode.getCode(),
-                                ex.getMessage(),
-                                httpStatus.value(),
-                                request.getHeader("User-Agent"));
 
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 ex.getMessage(),
@@ -91,8 +79,6 @@ public class GlobalExceptionHandler {
 
                 String errorMessage = String.join(", ", errors);
 
-                logger.error("Validation error for {}: {}", request.getRequestURI(), errorMessage);
-
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Invalid request parameters",
                                 HttpStatus.BAD_REQUEST.value(),
@@ -112,8 +98,6 @@ public class GlobalExceptionHandler {
 
                 String errorMessage = String.join(", ", errors);
 
-                logger.error("Constraint violation for {}: {}", request.getRequestURI(), errorMessage);
-
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Invalid request data",
                                 HttpStatus.BAD_REQUEST.value(),
@@ -125,8 +109,6 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadable(
                         HttpMessageNotReadableException ex, HttpServletRequest request) {
-
-                logger.error("JSON parsing error for {}: {}", request.getRequestURI(), ex.getMessage());
 
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Request body format is invalid",
@@ -140,8 +122,6 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiResponse<Object>> handleMissingParameter(
                         MissingServletRequestParameterException ex, HttpServletRequest request) {
 
-                logger.error("Missing parameter for {}: {}", request.getRequestURI(), ex.getMessage());
-
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "Required parameter '" + ex.getParameterName() + "' is missing",
                                 HttpStatus.BAD_REQUEST.value(),
@@ -153,8 +133,6 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(MethodArgumentTypeMismatchException.class)
         public ResponseEntity<ApiResponse<Object>> handleException(
                         MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-
-                logger.error("Type mismatch for {}: {}", request.getRequestURI(), ex.getMessage());
 
                 Class<?> requiredType = ex.getRequiredType();
                 String typeName = requiredType != null ? requiredType.getSimpleName() : "unknown";
@@ -171,9 +149,6 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiResponse<Object>> handleMethodNotSupported(
                         HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
 
-                logger.warn("Method not supported for {}: {} - Supported methods: {}",
-                                request.getRequestURI(), ex.getMethod(), ex.getSupportedMethods());
-
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "HTTP method '" + ex.getMethod() + "' is not supported for this endpoint",
                                 HttpStatus.METHOD_NOT_ALLOWED.value(),
@@ -186,8 +161,6 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
                         IllegalArgumentException ex, HttpServletRequest request) {
 
-                logger.error("Illegal argument for {}: {}", request.getRequestURI(), ex.getMessage());
-
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 ex.getMessage(),
                                 HttpStatus.BAD_REQUEST.value(),
@@ -199,8 +172,6 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Object>> handleGenericException(
                         Exception ex, HttpServletRequest request) {
-
-                logger.error("Unexpected error occurred for {}: ", request.getRequestURI(), ex);
 
                 ApiResponse<Object> apiResponse = ApiResponse.error(
                                 "An unexpected error occurred. Please try again later.",

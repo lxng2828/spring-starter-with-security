@@ -1,7 +1,5 @@
 package com.vtlong.my_spring_boot_project.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -19,8 +17,6 @@ import java.util.Set;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
-
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -34,38 +30,24 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        logger.info("Starting default data initialization...");
-
         initializeRoles();
         initializeAdminUser();
-
-        logger.info("Completed default data initialization!");
     }
 
     private void initializeRoles() {
-        logger.info("Initializing default roles...");
-
         for (RoleType roleType : RoleType.values()) {
             if (!roleRepository.existsByName(roleType)) {
                 Role role = Role.builder()
                         .name(roleType)
                         .build();
 
-                Role savedRole = roleRepository.save(role);
-                logger.info("Created role: {} with ID: {}", roleType.getCode(), savedRole.getId());
-            } else {
-                logger.debug("Role {} already exists, skipping", roleType.getCode());
+                roleRepository.save(role);
             }
         }
-
-        logger.info("Completed roles initialization!");
     }
 
     private void initializeAdminUser() {
-        logger.info("Initializing admin user...");
-
         if (userRepository.existsByEmail("admin@example.com")) {
-            logger.info("Admin user already exists, skipping");
             return;
         }
 
@@ -73,7 +55,6 @@ public class DataInitializer implements CommandLineRunner {
                 .collect(java.util.stream.Collectors.toSet());
 
         if (allRoles.isEmpty()) {
-            logger.warn("No roles found, cannot create admin user");
             return;
         }
 
@@ -90,10 +71,6 @@ public class DataInitializer implements CommandLineRunner {
                 .roles(allRoles)
                 .build();
 
-        User savedUser = userRepository.save(adminUser);
-        logger.info("Created admin user: {} with ID: {} and {} roles",
-                savedUser.getUsername(), savedUser.getId(), savedUser.getRoles().size());
-
-        logger.info("Admin user credentials - Email: admin@example.com, Password: 12345678");
+        userRepository.save(adminUser);
     }
 }
