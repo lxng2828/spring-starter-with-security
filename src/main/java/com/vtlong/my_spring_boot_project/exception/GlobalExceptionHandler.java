@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -36,6 +38,30 @@ public class GlobalExceptionHandler {
                                 errorCode.getCode());
 
                 return ResponseEntity.status(httpStatus).body(apiResponse);
+        }
+
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(
+                        AccessDeniedException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "You do not have permission to access this resource",
+                                HttpStatus.FORBIDDEN.value(),
+                                "Access Denied");
+
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
+        }
+
+        @ExceptionHandler(AuthorizationDeniedException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAuthorizationDeniedException(
+                        AuthorizationDeniedException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Access permission denied",
+                                HttpStatus.FORBIDDEN.value(),
+                                "Authorization Denied");
+
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
         }
 
         private HttpStatus determineHttpStatus(ErrorCode errorCode) {

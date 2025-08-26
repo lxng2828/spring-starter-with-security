@@ -1,5 +1,6 @@
 package com.vtlong.my_spring_boot_project.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,11 +21,13 @@ public class UserController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('MODERATOR')")
     public UserResponseDto getCurrentUser() {
         return userService.getCurrentUser();
     }
 
     @GetMapping("/authorities")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('MODERATOR')")
     public Map<String, Object> getCurrentUserAuthorities() {
         Map<String, Object> response = new HashMap<>();
         response.put("authorities", userService.getCurrentUserAuthorities());
