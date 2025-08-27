@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.nimbusds.jose.JOSEException;
 import com.vtlong.my_spring_boot_project.dto.ApiResponse;
 import com.vtlong.my_spring_boot_project.dto.request.LoginRequest;
+import com.vtlong.my_spring_boot_project.dto.request.LogoutRequest;
 import com.vtlong.my_spring_boot_project.dto.request.IntrospectRequest;
 import com.vtlong.my_spring_boot_project.dto.response.LoginResponse;
 import com.vtlong.my_spring_boot_project.dto.response.IntrospectResponse;
@@ -33,6 +34,12 @@ public class AuthController {
             HttpServletRequest request) {
         LoginResponse loginResponse = authService.handleLogin(loginRequest);
         return ResponseEntity.ok(ApiResponse.success(loginResponse, "Đăng nhập thành công", request));
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody LogoutRequest logoutRequest, HttpServletRequest request) throws JOSEException, ParseException {
+        authService.handleLogout(logoutRequest);
+        return ResponseEntity.ok(ApiResponse.success(null, "Đăng xuất thành công", request));
     }
 
     @PostMapping("/introspect")

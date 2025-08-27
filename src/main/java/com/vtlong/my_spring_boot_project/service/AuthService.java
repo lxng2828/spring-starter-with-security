@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.nimbusds.jose.*;
@@ -16,23 +17,29 @@ import com.nimbusds.jwt.SignedJWT;
 import com.vtlong.my_spring_boot_project.config.JwtConfig;
 import com.vtlong.my_spring_boot_project.dto.request.IntrospectRequest;
 import com.vtlong.my_spring_boot_project.dto.request.LoginRequest;
+import com.vtlong.my_spring_boot_project.dto.request.LogoutRequest;
 import com.vtlong.my_spring_boot_project.dto.response.IntrospectResponse;
 import com.vtlong.my_spring_boot_project.dto.response.LoginResponse;
 import com.vtlong.my_spring_boot_project.exception.AppException;
 import com.vtlong.my_spring_boot_project.exception.ErrorCode;
+import com.vtlong.my_spring_boot_project.model.InvalidatedToken;
 import com.vtlong.my_spring_boot_project.model.User;
 import com.vtlong.my_spring_boot_project.repository.UserRepository;
+import com.vtlong.my_spring_boot_project.repository.InvalidatedTokenRepository;
 
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtConfig jwtConfig;
+    private final InvalidatedTokenRepository invalidatedTokenRepository;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtConfig jwtConfig) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtConfig jwtConfig,
+            InvalidatedTokenRepository invalidatedTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtConfig = jwtConfig;
+        this.invalidatedTokenRepository = invalidatedTokenRepository;
     }
 
     public LoginResponse handleLogin(LoginRequest loginRequest) {
@@ -45,6 +52,22 @@ public class AuthService {
 
         String token = generateToken(user);
         return LoginResponse.builder().success(true).token(token).build();
+    }
+
+    public void handleLogout(LogoutRequest request) throws JOSEException, ParseException {
+        String token = request.getToken();
+        boolean isValid = verifyToken(token);
+        if (!isValid) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+
+        String jti = claimsSet.getJWTID();
+        Date expirationTime = claimsSet.getExpirationTime();
+
+        invalidatedTokenRepository.save(InvalidatedToken.builder().id(jti).expiresAt(expirationTime).build());
     }
 
     private List<String> buildScopes(Set<String> roleNames) {
@@ -66,6 +89,7 @@ public class AuthService {
                 .audience("my-spring-app")
                 .issueTime(new Date())
                 .expirationTime(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * jwtConfig.getExpirationHours()))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId())
                 .claim("username", user.getUsername())
                 .claim("email", user.getEmail())
@@ -86,23 +110,45 @@ public class AuthService {
     public IntrospectResponse handleIntrospect(IntrospectRequest introspectRequest)
             throws JOSEException, ParseException {
         String token = introspectRequest.getToken();
+
+        boolean isValid = verifyToken(token);
+        if (!isValid) {
+            return IntrospectResponse.builder().valid(false).build();
+        }
+
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+            String jti = claimsSet.getJWTID();
+
+            if (invalidatedTokenRepository.existsById(jti)) {
+                return IntrospectResponse.builder().valid(false).build();
+            }
+        } catch (Exception e) {
+            return IntrospectResponse.builder().valid(false).build();
+        }
+
+        return IntrospectResponse.builder().valid(true).build();
+    }
+
+    private boolean verifyToken(String token) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(jwtConfig.getSignerKey().getBytes(StandardCharsets.UTF_8));
         SignedJWT signedJWT = SignedJWT.parse(token);
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
         if (expirationTime.before(new Date())) {
-            return IntrospectResponse.builder().valid(false).build();
+            return false;
         }
 
         boolean isValid = signedJWT.verify(verifier);
         if (!isValid) {
-            return IntrospectResponse.builder().valid(false).build();
+            return false;
         }
 
         if (!signedJWT.getJWTClaimsSet().getAudience().contains("my-spring-app")) {
-            return IntrospectResponse.builder().valid(false).build();
+            return false;
         }
 
-        return IntrospectResponse.builder().valid(true).build();
+        return true;
     }
 }

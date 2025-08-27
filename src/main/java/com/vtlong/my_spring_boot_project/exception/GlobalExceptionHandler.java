@@ -8,6 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -65,6 +70,71 @@ public class GlobalExceptionHandler {
                                 request);
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
+        }
+
+        @ExceptionHandler(JwtException.class)
+        public ResponseEntity<ApiResponse<Object>> handleJwtException(
+                        JwtException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                ex.getMessage(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "JWT Error",
+                                request);
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
+        }
+
+        @ExceptionHandler(AuthenticationException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
+                        AuthenticationException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Authentication failed: " + ex.getMessage(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Authentication Error",
+                                request);
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
+        }
+
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ApiResponse<Object>> handleBadCredentialsException(
+                        BadCredentialsException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Invalid credentials",
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Bad Credentials",
+                                request);
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
+        }
+
+        @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAuthenticationCredentialsNotFoundException(
+                        AuthenticationCredentialsNotFoundException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Authentication credentials not found",
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Missing Credentials",
+                                request);
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
+        }
+
+        @ExceptionHandler(InsufficientAuthenticationException.class)
+        public ResponseEntity<ApiResponse<Object>> handleInsufficientAuthenticationException(
+                        InsufficientAuthenticationException ex, HttpServletRequest request) {
+
+                ApiResponse<Object> apiResponse = ApiResponse.error(
+                                "Insufficient authentication",
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Insufficient Authentication",
+                                request);
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiResponse);
         }
 
         private HttpStatus determineHttpStatus(ErrorCode errorCode) {
